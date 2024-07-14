@@ -5,56 +5,74 @@ class AppBluetoothLogic{
 
   static BluetoothDevice? connectedDevice;
 
-  static Future<void> sendOne({required int pin, required int state}) async {
+  static Future<void> sendOne({required int data}) async {
      ///turnon the bluetooth
     List<BluetoothService> servicez = await connectedDevice!.discoverServices();
     
         servicez.forEach((service) {
         final chtcs = service.characteristics;
-        debugPrint(":::::::>>>>Drillox Characteristics:  $chtcs");
+        debugPrint(":::::::>>>>Drillox Service:  $service");
 
         for(var xtic in chtcs){
-          debugPrint("::::::>>>  Xtic(): ${xtic.properties.write}");
-          if(xtic.properties.write ==true){    
-            xtic.write([pin, state], withoutResponse: false).then((value) 
-              => debugPrint("::::>>>>> Sending completed"));
+          // debugPrint("::::::>>>  Xtic(): ${xtic.properties.write}");
+
+          
+          if(xtic.properties.write){    
+            print("\n::::::::::::::>>>>>The service that allows Write Options :  $service\n\n");
+            xtic.write([data], withoutResponse: false).then((value) 
+              {
+                debugPrint("::::>>>>> Sending completed:  $data");
+                
+                readPh().then((x)
+                => debugPrint("::::>>>>> Reading completed:  $x"));
+                });
+            print(":::>>>> Xtick read: ${xtic.properties.read}");
             
           }
+          xtic.setNotifyValue(true).then((x){
+            print("Done setting the value...............");
+            xtic.value.listen((event) {
+                  print("=========> Data from the waiting Update..d (${xtic.characteristicUuid}) >>> $event");
+                },);
+          });
+          
         }
     });
   }
 
 
 
-  static Future<void> sendBulk({required List<int> pins, required int state}) async {
-    ///turnoff the bluetooth
-    
+
+  static Future<List<int>> readPh() async {
     List<BluetoothService> servicez = await connectedDevice!.discoverServices();
-    
+    List<int> value = [];    
         servicez.forEach((service) {
         final chtcs = service.characteristics;
-        debugPrint(":::::::>>>>Drillox Characteristics:  $chtcs");
+        // debugPrint(":::::::>>>>Drillox Characteristics:  $chtcs");
 
-        BluetoothCharacteristic? xt;
         for(var xtic in chtcs){
-          debugPrint("::::::>>>  Xtic(): ${xtic.properties.write}");
-          if(xtic.properties.write ==true){
+          // debugPrint("::::::>>>  Xtic(): ${xtic.properties.write}");
+          if(xtic.properties.read){    
+            // xtic.write([data], withoutResponse: false).then((value) 
+            //   => debugPrint("::::>>>>> Sending completed:  $data"));
             
-            pins.forEach((pin) {
-              xtic.write([pin,state]).then((value) 
-              => debugPrint("::::>>>>> Sending completed:  {$pin, $state}"));
+             xtic.read().then((data){
+              value = data;
+              print(":::::Value>>>>::::>>>>>>>>>> ${String.fromCharCodes(data)}");
+              print(":::::Value As Array>>>>::::>>>>>>>>>> $data");
              });
+            print(":::>>>> Xtick read: ${xtic.properties.read}");
+            print(":::>>>> Xtick read Data: $value");
+
+            
             
           }
         }
 
-        
-        
     });
-  }
 
-  static Future<void> readOn(int pin) async {
 
+        return value;
   }
 
 

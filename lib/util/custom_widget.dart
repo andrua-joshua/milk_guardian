@@ -123,7 +123,7 @@ class ListedResultWidget extends StatelessWidget{
             Expanded(
               child:Text(
                 data[index],
-                style: AppStyle.deviceCountLabelStyle,))
+                style: AppStyle.normalBlackTextStyle,))
           ],
         ))),
     );
@@ -175,7 +175,12 @@ class _cardedResultWidgetState extends State<CardedResultWidget>{
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   SizedBox(height: 10,),
-                  Text(widget.firstLabel, style: AppStyle.roomLabelStyle,),
+                  Text(
+                    widget.firstLabel, 
+                    style: AppStyle.roomLabelStyle, 
+                    maxLines: 2, 
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,),
                   Text(widget.firstValue, style: AppStyle.sensorDataStyle,)
                 ],
               ),
@@ -201,4 +206,46 @@ class _cardedResultWidgetState extends State<CardedResultWidget>{
         );
       },);
   }
+}
+
+
+
+class TextInputFieldWidget extends StatelessWidget{
+  final TextEditingController controller;
+  final bool isObsured;
+  final String hintText;
+  const TextInputFieldWidget({
+    required this.controller,
+    required this.hintText,
+    required this.isObsured,
+    super.key
+  });
+
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 45,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.grey,
+          width: 1
+        )
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 7),
+      child: TextFormField(
+        controller: controller,
+        // obscureText: isObsured,
+        decoration: InputDecoration(
+          border: InputBorder.none,
+          hintText: hintText,
+          suffixIcon: isObsured? IconButton(
+            onPressed: (){}, 
+            icon: const Icon(Icons.visibility)): null
+        ),
+      ),
+    );
+  }
+
 }

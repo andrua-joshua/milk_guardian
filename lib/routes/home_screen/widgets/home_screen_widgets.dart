@@ -1,23 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
+import 'package:fluttertoast/fluttertoast.dart';
+import 'package:milk_analysis/bloc/modules/record_module.dart';
 import 'package:milk_analysis/bloc/respository/logic.dart';
+import 'package:milk_analysis/bloc/respository/records_repository/record_repository_local.dart';
+import 'package:milk_analysis/provider/record_provider.dart';
+import 'package:milk_analysis/provider/user_provider.dart';
 import 'package:milk_analysis/routes.dart';
 import 'package:milk_analysis/util/app_styles.dart';
+import 'package:provider/provider.dart';
 
 class UnitRecordWidget extends StatelessWidget{
-  final String label;
-  const UnitRecordWidget({super.key, required this.label});
+  final Record record;
+  const UnitRecordWidget({super.key, required this.record});
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    
+    return Consumer2<RecordProvider, UserProvider>(
+      builder:(context, valueR, valueU, child) => Padding(
       padding: const EdgeInsets.symmetric(vertical: 7),
       child: GestureDetector(
-        onTap: () => Navigator.pushNamed(context, RouteGenerator.recordScreen),
+        // onTap: () => Navigator.pushNamed(context, RouteGenerator.recordScreen),
         child:Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: AppStyle.sensorDataStyle,),
+          Text(record.createdAt , style: AppStyle.sensorDataStyle,),
           const SizedBox(width: 10,),
           GestureDetector(
             onTapDown: (pos){
@@ -31,18 +40,25 @@ class UnitRecordWidget extends StatelessWidget{
                   MediaQuery.of(context).size.width - offset.dx,
                         MediaQuery.of(context).size.height - offset.dy), 
                 items: [
-                  const PopupMenuItem(
-                          child: SizedBox(
-                            child: Row(
-                              children: [
-                                Icon(Icons.save_alt, size: 20,),
-                                SizedBox(width: 5,),
-                                Text('Download as PDF')
-                              ],
-                            ),
-                          )),
-                      const PopupMenuItem(
-                          child: SizedBox(
+                  // const PopupMenuItem(
+                  //         child: SizedBox(
+                  //           child: Row(
+                  //             children: [
+                  //               Icon(Icons.save_alt, size: 20,),
+                  //               SizedBox(width: 5,),
+                  //               Text('Download as PDF')
+                  //             ],
+                  //           ),
+                  //         )),
+                      PopupMenuItem(
+                          child: GestureDetector(
+                            onTap: (){
+                              deleteRecord(recordId: record.id, 
+                              userProvider: valueU, 
+                              provider: valueR);
+                              // valueU.notifyAll();
+                            },
+                            child: const SizedBox(
                             child: Row(
                               children: [
                                 Icon(Icons.delete_forever, color: Colors.red, size: 20,),
@@ -50,13 +66,30 @@ class UnitRecordWidget extends StatelessWidget{
                                 Text('Delete chat')
                               ],
                             ),
+                          ),
                           )),
                 ]);
             },
             child: Icon(Icons.more_vert),
           )
         ],
-      )),);
+      )),),);
+  }
+
+  Future<void> deleteRecord({
+    required int recordId,
+    required UserProvider userProvider,
+    required RecordProvider provider
+  })async{
+    final res =  await provider.recordBaseRepo.deleteRecord(
+      record: record, recordId: recordId, 
+      userProvider: userProvider);
+
+    if(res == 1){
+      Fluttertoast.showToast(msg: "Record deleted successfully");
+    }else{
+      Fluttertoast.showToast(msg: "Failed to delete record");
+    }
   }
 
 }
@@ -162,6 +195,7 @@ class UnitBTDeviceItem extends StatelessWidget{
                     return Text("Connected to ${btDevice.platformName} Successfully!");
                   }
                   if(snapshot.hasError){
+                    print("The Error : ${snapshot.error.toString()}");
                     return Text("Error: ${snapshot.error.toString()}");
                   }
                   return const CircleAvatar(
